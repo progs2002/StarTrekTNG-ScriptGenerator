@@ -1,4 +1,6 @@
 dataset/rawtext/*.txt
+dataset/rawtext/*.zip
 dataset/processed/*.txt
 .venv/
 __pycache__/
+*.ipynb
