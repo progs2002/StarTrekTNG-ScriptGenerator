@@ -65,17 +65,27 @@ def process_files(raw_filepath, clean_filepath):
     raw_files = sorted(glob(f'{raw_filepath}/*.txt'))
     for idx, raw_file in enumerate(tqdm.tqdm(raw_files)):
         try:
-            text = open(raw_file).read()
+            text = open(raw_file, encoding='utf-8').read()
             text = clean_text(text)
 
             with open(f'{clean_filepath}/{idx}.txt', 'w') as f:
                 f.write(text)
 
         except UnicodeDecodeError:
+            print(idx)
             continue
-        
+
+def create_master_file(clean_filepath):
+    clean_files = glob(f'{clean_filepath}/*.txt')
+    with open('./master.txt', 'w') as master_f:
+        for filename in clean_files:
+            f = open(filename, encoding='utf-8')
+            master_f.write(f.read()+'\n')
+            f.close()
+
 if __name__ == '__main__':
     process_files(
         raw_filepath='dataset/rawtext',
         clean_filepath='dataset/processed'
     )
+    create_master_file(clean_filepath='dataset/processed')
