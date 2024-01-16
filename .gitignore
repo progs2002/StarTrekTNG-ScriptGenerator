@@ -3,4 +3,4 @@ dataset/rawtext/*.zip
 dataset/processed/*.txt
 .venv/
 __pycache__/
-*.ipynb
+star-trek-tng-script-generator/

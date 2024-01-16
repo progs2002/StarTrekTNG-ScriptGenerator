@@ -45,27 +45,25 @@ def clean_text(text):
     text = text.strip()
     
     #remove unecessary newlines 
+    cap13 = re.compile(r'^\n{2,}', re.MULTILINE)
+    text = cap13.sub(r'\n', text)
+
+    #remove nullcharacters
+    cap14 = re.compile(r'^.*\x00.*$', re.MULTILINE)
+    text = cap14.sub('',text) 
+
     out_text = []
-    buffer = []
-
+    
     for line in text.split('\n'):
-        if line != '':
-            buffer.append(line.strip())
-        else:
-            out_text.append(' '.join(buffer))
-            buffer = []
+        out_text.append(line.strip())
 
-    #remove empty lines
-    out_text = filter(lambda x: x, out_text)
-    out_text = '\n'.join(out_text)
-
-    return out_text
+    return '\n'.join(out_text)
 
 def process_files(raw_filepath, clean_filepath):
     raw_files = sorted(glob(f'{raw_filepath}/*.txt'))
     for idx, raw_file in enumerate(tqdm.tqdm(raw_files)):
         try:
-            text = open(raw_file, encoding='utf-8').read()
+            text = open(raw_file).read()
             text = clean_text(text)
 
             with open(f'{clean_filepath}/{idx}.txt', 'w') as f:
@@ -75,17 +73,8 @@ def process_files(raw_filepath, clean_filepath):
             print(idx)
             continue
 
-def create_master_file(clean_filepath):
-    clean_files = glob(f'{clean_filepath}/*.txt')
-    with open('./master.txt', 'w') as master_f:
-        for filename in clean_files:
-            f = open(filename, encoding='utf-8')
-            master_f.write(f.read()+'\n')
-            f.close()
-
 if __name__ == '__main__':
     process_files(
         raw_filepath='dataset/rawtext',
         clean_filepath='dataset/processed'
     )
-    create_master_file(clean_filepath='dataset/processed')
