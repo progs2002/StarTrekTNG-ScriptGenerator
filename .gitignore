@@ -4,3 +4,4 @@ dataset/processed/*.txt
 .venv/
 __pycache__/
 star-trek-tng-script-generator/
+./*.zip
