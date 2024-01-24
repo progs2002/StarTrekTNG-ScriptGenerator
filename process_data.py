@@ -33,6 +33,14 @@ def clean_text(text):
     cap11 = re.compile(r'^thru.*$', re.MULTILINE)
     cap12 = re.compile(r'^\t{9}CUT.*$', re.MULTILINE)
 
+    #remove occurances of INTERCUT
+    cap15 = re.compile(r'^.*INTERCUT.*$', re.MULTILINE)
+    text = cap15.sub('',text)
+
+    #remove occurances of 'GO TO:'
+    cap16 = re.compile(r'^.*GO TO:.*$', re.MULTILINE)
+    text = cap16.sub('',text)
+
     text = cap5.sub('',text)
     text = cap6.sub('',text)
     text = cap7.sub('',text)
@@ -43,28 +51,47 @@ def clean_text(text):
     text = cap12.sub('',text)
 
     text = text.strip()
-    
+
+    #remove null characters 
+    cap13 = re.compile(r'^\s*\x00.*$', re.MULTILINE)
+    text = cap13.sub('',text)
+
+    #remove end of scene texts
+    cap14 = re.compile(r'^\s*(THE )?END[^AR][^:]*$', re.MULTILINE)
+    text = cap14.sub('',text)
+
+    #TODO:remove "CUT TO:"
+    cap16 = re.compile(r'^\s*CUT TO:.*$', re.MULTILINE)
+    text = cap16.sub('',text)
+
     #remove unecessary newlines 
-    cap13 = re.compile(r'^\n{2,}', re.MULTILINE)
-    text = cap13.sub(r'\n', text)
-
-    #remove nullcharacters
-    cap14 = re.compile(r'^.*\x00.*$', re.MULTILINE)
-    text = cap14.sub('',text) 
-
     out_text = []
-    
-    for line in text.split('\n'):
-        out_text.append(line.strip())
+    buffer = []
 
-    return '\n'.join(out_text)
+    for line in text.split('\n'):
+        if line != '':
+            buffer.append(line.strip())
+        else:
+            out_text.append(' '.join(buffer))
+            buffer = []
+
+    #remove empty lines
+    out_text = filter(lambda x: x, out_text)
+    out_text = '\n'.join(out_text)
+
+    return out_text
 
 def process_files(raw_filepath, clean_filepath):
     raw_files = sorted(glob(f'{raw_filepath}/*.txt'))
+    
+    #remove uncessary dialogue from master.txt
+    final_cap = re.compile(r'^[A-Z]+:\s*$\n', re.MULTILINE)
+
     for idx, raw_file in enumerate(tqdm.tqdm(raw_files)):
         try:
-            text = open(raw_file).read()
+            text = open(raw_file, encoding='utf-8').read()
             text = clean_text(text)
+            text = final_cap.sub('',text)
 
             with open(f'{clean_filepath}/{idx}.txt', 'w') as f:
                 f.write(text)
@@ -73,8 +100,17 @@ def process_files(raw_filepath, clean_filepath):
             print(idx)
             continue
 
+def create_master_file(clean_filepath):
+    clean_files = glob(f'{clean_filepath}/*.txt')
+    with open('./master.txt', 'w') as master_f:
+        for filename in clean_files:
+            f = open(filename, encoding='utf-8')
+            master_f.write(f.read()+'\n')
+            f.close()
+
 if __name__ == '__main__':
     process_files(
         raw_filepath='dataset/rawtext',
         clean_filepath='dataset/processed'
     )
+    create_master_file(clean_filepath='dataset/processed')
